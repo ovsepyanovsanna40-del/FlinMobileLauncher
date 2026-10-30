@@ -176,9 +176,12 @@ jobs:
           tree.write(p,encoding="utf-8",xml_declaration=True)
           PY
 
-      - name: Remove dead dependency repository
+      - name: Configure dependency repositories
         working-directory: client
-        run: sed -i "/mint\\.splunk\\.com/d" build.gradle
+        shell: bash
+        run: |
+          sed -i '/mint\.splunk\.com/d' build.gradle
+          sed -i "/mavenCentral()/a\\        maven { url 'https://maven.scijava.org/content/repositories/public/' }" build.gradle
 
       - name: Brand and remove upstream signing keys
         working-directory: client
