@@ -111,7 +111,8 @@ jobs:
                   }
                   getPreferences(0).edit().putString("nickname",n).apply();
                   try {
-                      File dir=new File(Environment.getExternalStorageDirectory(), "FlinMobile");\n                      if(!dir.exists() && !dir.mkdirs()) throw new Exception("Не удалось создать /storage/emulated/0/FlinMobile");
+                      File dir=new File(Environment.getExternalStorageDirectory(), "FlinMobile");
+                      if(!dir.exists() && !dir.mkdirs()) throw new Exception("Не удалось создать /storage/emulated/0/FlinMobile");
                       String ini="[client]\nhost = 195.18.27.226\nport = 3146\nname = "+n+"\nautoaim = 0\n\n[debug]\ndebug = false\nonline = true\n";
                       try(FileOutputStream out=new FileOutputStream(new File(dir,"settings.ini"))) {
                           out.write(ini.getBytes(StandardCharsets.UTF_8));
