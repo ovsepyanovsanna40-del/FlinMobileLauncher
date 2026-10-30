@@ -10,31 +10,126 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Flin project
-        uses: actions/checkout@v4
-        with:
-          path: flin
-
-      - name: Checkout SA-MP client source
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           repository: kuzia15/SAMP-Mobile
           ref: GTA-2.10
           path: client
 
-      - name: Set up Java 17
-        uses: actions/setup-java@v4
+      - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
 
-      - name: Set up Android SDK and NDK
-        uses: android-actions/setup-android@v4
+      - uses: android-actions/setup-android@v4
         with:
           accept-android-sdk-licenses: true
           packages: 'platform-tools platforms;android-34 build-tools;34.0.0 ndk;26.2.11394342'
 
-      - name: Brand app and use CI signing
+      - name: Install Flin launcher screen
+        working-directory: client
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat > app/src/main/java/com/samp/mobile/launcher/MainActivity.java <<'JAVA'
+          package com.samp.mobile.launcher;
+          import android.app.Activity;
+          import android.content.Intent;
+          import android.graphics.Color;
+          import android.graphics.Typeface;
+          import android.graphics.drawable.GradientDrawable;
+          import android.os.Bundle;
+          import android.view.Gravity;
+          import android.view.WindowManager;
+          import android.widget.Button;
+          import android.widget.EditText;
+          import android.widget.LinearLayout;
+          import android.widget.TextView;
+          import android.widget.Toast;
+          import com.samp.mobile.game.SAMP;
+          import java.io.File;
+          import java.io.FileOutputStream;
+          import java.nio.charset.StandardCharsets;
+
+          public class MainActivity extends Activity {
+              private static final int BG=Color.rgb(9,9,9), ORANGE=Color.rgb(255,107,0);
+              private EditText nick;
+              private GradientDrawable panel(int color, int stroke) {
+                  GradientDrawable d=new GradientDrawable(); d.setColor(color); d.setCornerRadius(24);
+                  if(stroke!=0)d.setStroke(2,stroke); return d;
+              }
+              private TextView text(String s,int size,int color,boolean bold) {
+                  TextView t=new TextView(this); t.setText(s); t.setTextSize(size); t.setTextColor(color);
+                  t.setGravity(Gravity.CENTER); if(bold)t.setTypeface(Typeface.DEFAULT,Typeface.BOLD); return t;
+              }
+              @Override public void onCreate(Bundle b) {
+                  super.onCreate(b); getWindow().setStatusBarColor(BG); getWindow().setNavigationBarColor(BG);
+                  getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
+                  LinearLayout root=new LinearLayout(this); root.setOrientation(1); root.setGravity(Gravity.CENTER_HORIZONTAL);
+                  root.setPadding(24,24,24,20);
+                  GradientDrawable bg=new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,new int[]{0xff301407,BG,Color.BLACK});
+                  root.setBackground(bg);
+                  TextView brand=text("FLIN MOBILE",25,Color.WHITE,true); brand.setLetterSpacing(.12f);
+                  root.addView(brand,new LinearLayout.LayoutParams(-1,54));
+                  root.addView(text("ROLE PLAY  •  MOBILE",11,ORANGE,true),new LinearLayout.LayoutParams(-1,26));
+                  LinearLayout hero=new LinearLayout(this); hero.setOrientation(1); hero.setGravity(Gravity.CENTER);
+                  hero.setBackground(panel(0xff231610,ORANGE));
+                  LinearLayout.LayoutParams hp=new LinearLayout.LayoutParams(-1,0,1); hp.setMargins(0,24,0,20); root.addView(hero,hp);
+                  hero.addView(text("FLIN",52,Color.WHITE,true));
+                  hero.addView(text("ТВОЯ ИГРА. ТВОЯ ИСТОРИЯ.",12,ORANGE,true));
+                  root.addView(text("СЕРВЕР FLIN ROLE PLAY",13,Color.LTGRAY,true),new LinearLayout.LayoutParams(-1,34));
+                  root.addView(text("195.18.27.226:3146",19,Color.WHITE,true),new LinearLayout.LayoutParams(-1,38));
+                  nick=new EditText(this); nick.setSingleLine(true); nick.setTextColor(Color.WHITE); nick.setHintTextColor(Color.GRAY);
+                  nick.setHint("Игровой никнейм"); nick.setText(getPreferences(0).getString("nickname",""));
+                  nick.setPadding(18,8,18,8); nick.setBackground(panel(0xff1f1f1f,ORANGE));
+                  LinearLayout.LayoutParams np=new LinearLayout.LayoutParams(-1,56); np.setMargins(0,20,0,14); root.addView(nick,np);
+                  Button play=new Button(this); play.setText("ИГРАТЬ  ▶"); play.setTextColor(Color.WHITE); play.setTextSize(16);
+                  play.setTypeface(Typeface.DEFAULT,Typeface.BOLD); play.setAllCaps(false); play.setBackground(panel(ORANGE,0));
+                  root.addView(play,new LinearLayout.LayoutParams(-1,58)); play.setOnClickListener(v->startGame());
+                  root.addView(text("FLIN MOBILE  •  ONE APP",10,Color.GRAY,true),new LinearLayout.LayoutParams(-1,42));
+                  setContentView(root);
+              }
+              private void startGame() {
+                  String n=nick.getText().toString().trim();
+                  if(!n.matches("[A-Za-z0-9_]{3,24}")) {
+                      Toast.makeText(this,"Ник: 3–24 символа, латиница, цифры и _",Toast.LENGTH_LONG).show(); return;
+                  }
+                  getPreferences(0).edit().putString("nickname",n).apply();
+                  try {
+                      File dir=getExternalFilesDir(null); if(dir==null)throw new Exception("Нет папки данных");
+                      String ini="[client]\nhost = 195.18.27.226\nport = 3146\nname = "+n+"\nautoaim = 0\n\n[debug]\ndebug = false\nonline = true\n";
+                      try(FileOutputStream out=new FileOutputStream(new File(dir,"settings.ini"))) {
+                          out.write(ini.getBytes(StandardCharsets.UTF_8));
+                      }
+                      startActivity(new Intent(this,SAMP.class));
+                  } catch(Exception e) {
+                      Toast.makeText(this,"Ошибка запуска: "+e.getMessage(),Toast.LENGTH_LONG).show();
+                  }
+              }
+          }
+          JAVA
+          python3 - <<'PY'
+          from pathlib import Path
+          import xml.etree.ElementTree as ET
+          p=Path("app/src/main/AndroidManifest.xml")
+          tree=ET.parse(p); root=tree.getroot()
+          a="{http://schemas.android.com/apk/res/android}"
+          app=root.find("application")
+          for act in app.findall("activity"):
+              name=act.get(a+"name","")
+              if name=="com.samp.mobile.game.SAMP":
+                  act.set(a+"exported","false")
+                  for f in list(act.findall("intent-filter")): act.remove(f)
+              elif name==".launcher.MainActivity":
+                  act.set(a+"screenOrientation","sensor")
+                  act.set(a+"exported","true")
+                  f=ET.SubElement(act,"intent-filter")
+                  ET.SubElement(f,"action",{a+"name":"android.intent.action.MAIN"})
+                  ET.SubElement(f,"category",{a+"name":"android.intent.category.LAUNCHER"})
+          tree.write(p,encoding="utf-8",xml_declaration=True)
+          PY
+
+      - name: Brand and remove upstream signing keys
         working-directory: client
         shell: bash
         run: |
@@ -42,25 +137,22 @@ jobs:
           sed -i 's#<string name="app_name">[^<]*</string>#<string name="app_name">Flin Mobile</string>#' app/src/main/res/values/strings.xml
           python3 - <<'PY'
           from pathlib import Path
-          p = Path("app/build.gradle")
-          s = p.read_text()
-          start = s.find("    signingConfigs {")
-          if start >= 0:
-              end = s.find("\n    }\n    compileSdk", start)
-              if end < 0:
-                  raise SystemExit("Could not safely locate signingConfigs block")
-              s = s[:start] + s[end + 7:]
-          s = s.replace("            signingConfig signingConfigs.release\n", "")
+          p=Path("app/build.gradle"); s=p.read_text()
+          start=s.find("    signingConfigs {")
+          if start>=0:
+              end=s.find("\n    }\n    compileSdk",start)
+              if end<0: raise SystemExit("Signing block layout changed")
+              s=s[:start]+s[end+7:]
+          s=s.replace("            signingConfig signingConfigs.release\n","")
           p.write_text(s)
           PY
           chmod +x gradlew
 
-      - name: Build universal ARM32 + ARM64 APK
+      - name: Build ARM32 and ARM64 APK
         working-directory: client
         run: ./gradlew --no-daemon assembleDebug
 
-      - name: Upload integrated APK
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         with:
           name: Flin-Mobile-integrated-debug
           path: client/app/build/outputs/apk/debug/*.apk
