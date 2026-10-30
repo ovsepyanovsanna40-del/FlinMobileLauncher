@@ -183,6 +183,8 @@ jobs:
               if end<0: raise SystemExit("Signing block layout changed")
               s=s[:start]+s[end+7:]
           s=s.replace("            signingConfig signingConfigs.release\n","")
+          s=s.replace("    implementation 'com.github.amitshekhariitbhu:PRDownloader:1.0.1'\\n","")
+
           p.write_text(s)
           PY
           chmod +x gradlew
