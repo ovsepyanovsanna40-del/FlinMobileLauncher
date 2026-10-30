@@ -187,7 +187,9 @@ jobs:
           p=Path("app/build.gradle")
           s=p.read_text()
           marker="dependencies {"
-          repo="repositories { maven { url 'https://maven.scijava.org/content/repositories/public/' } }\\n\\n"
+          repo="""repositories { maven { url 'https://maven.scijava.org/content/repositories/public/' } }
+
+"""
           if marker not in s:
               raise SystemExit("Could not find app dependencies block")
           s=s.replace(marker, repo+marker, 1)
