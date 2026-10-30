@@ -182,6 +182,7 @@ jobs:
         run: |
           set -euo pipefail
           sed -i '/mint\.splunk\.com/d' build.gradle
+          sed -i 's/com.github.amitshekhariitbhu:PRDownloader:1.0.1/com.github.amitshekhariitbhu:PRDownloader:1.0.2/' app/build.gradle
           python3 - <<'PYREPO'
           from pathlib import Path
           p=Path("app/build.gradle")
