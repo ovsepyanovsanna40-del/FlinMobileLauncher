@@ -131,6 +131,10 @@ jobs:
           tree.write(p,encoding="utf-8",xml_declaration=True)
           PY
 
+      - name: Remove dead dependency repository
+        working-directory: client
+        run: sed -i "/mint\\.splunk\\.com/d" build.gradle
+
       - name: Brand and remove upstream signing keys
         working-directory: client
         shell: bash
