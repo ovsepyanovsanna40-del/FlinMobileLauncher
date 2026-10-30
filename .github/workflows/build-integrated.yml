@@ -173,6 +173,11 @@ jobs:
                   f=ET.SubElement(act,"intent-filter")
                   ET.SubElement(f,"action",{a+"name":"android.intent.action.MAIN"})
                   ET.SubElement(f,"category",{a+"name":"android.intent.category.LAUNCHER"})
+          if not any(x.get(a+"name") in (".launcher.LauncherActivity", "com.samp.mobile.launcher.LauncherActivity") for x in app.findall("activity")):
+              act=ET.SubElement(app,"activity",{a+"name":".launcher.LauncherActivity",a+"screenOrientation":"sensor",a+"exported":"true"})
+              f=ET.SubElement(act,"intent-filter")
+              ET.SubElement(f,"action",{a+"name":"android.intent.action.MAIN"})
+              ET.SubElement(f,"category",{a+"name":"android.intent.category.LAUNCHER"})
           tree.write(p,encoding="utf-8",xml_declaration=True)
           PY
 
