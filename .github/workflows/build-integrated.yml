@@ -143,7 +143,13 @@ jobs:
           p.write_text(s2)
           PY
           # Fix case-sensitive include mismatch in upstream native source.
-          sed -i 's/playerTabList\\.h/playertablist.h/g' app/src/main/cpp/samp/gui/gui.h
+          python3 - <<'PYFIX'
+          from pathlib import Path
+          p=Path("app/src/main/cpp/samp/gui/gui.h")
+          s=p.read_text()
+          s=s.replace("playerTabList.h", "playertablist.h")
+          p.write_text(s)
+          PYFIX
           python3 - <<'PY'
           from pathlib import Path
           import xml.etree.ElementTree as ET
