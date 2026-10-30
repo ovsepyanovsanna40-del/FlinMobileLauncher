@@ -1,11 +1,11 @@
-name: Build Flin Mobile Launcher
+name: Android Debug Build
 
 on:
   workflow_dispatch:
   push:
-    branches: ["main"]
-  pull_request:
-    branches: ["main"]
+    branches:
+      - main
+      - master
 
 permissions:
   contents: read
@@ -18,31 +18,75 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up JDK 17
+      - name: Set up Java 17
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
 
-      - name: Setup Android SDK
+      - name: Set up Android SDK
         uses: android-actions/setup-android@v4
         with:
           accept-android-sdk-licenses: true
-          log-accepted-android-sdk-licenses: false
           packages: 'platform-tools platforms;android-34 build-tools;34.0.0'
 
-      - name: Setup Gradle
+      - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
-        with:
-          gradle-version: '8.2'
 
-      - name: Build Debug APK
-        run: gradle --no-daemon assembleDebug
+      # Android resource filenames must use lowercase letters, digits and underscores.
+      - name: Fix invalid Android resource filenames
+        shell: bash
+        run: |
+          set -euo pipefail
 
-      - name: Upload APK
+          RES_DIR="app/src/main/res"
+
+          if [[ ! -d "$RES_DIR" ]]; then
+            echo "::error::Resource folder not found: $RES_DIR"
+            exit 1
+          fi
+
+          # Remove the known invalid extensionless file from the previous build error.
+          if [[ -f "$RES_DIR/mipmap-hdpi/1" ]]; then
+            rm -- "$RES_DIR/mipmap-hdpi/1"
+            echo "Removed invalid extensionless resource: mipmap-hdpi/1"
+          fi
+
+          while IFS= read -r -d '' file; do
+            dir="$(dirname "$file")"
+            name="$(basename "$file")"
+
+            if [[ "$name" != *.* ]]; then
+              echo "::error file=$file::Resource file has no extension. Rename it to a valid .png, .jpg, .webp or .xml file, or remove it if it is unnecessary."
+              exit 1
+            fi
+
+            base="${name%.*}"
+            ext="${name##*.}"
+
+            normalized_base="$(printf '%s' "$base" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9_]/_/g')"
+            normalized_ext="$(printf '%s' "$ext" | tr '[:upper:]' '[:lower:]')"
+            target="$dir/$normalized_base.$normalized_ext"
+
+            if [[ "$file" != "$target" ]]; then
+              if [[ -e "$target" ]]; then
+                echo "::error file=$file::Cannot rename because target already exists: $target"
+                exit 1
+              fi
+
+              mv -- "$file" "$target"
+              echo "Renamed: $name -> $(basename "$target")"
+            fi
+          done < <(find "$RES_DIR" -type f -print0)
+
+      - name: Build debug APK
+        run: |
+          chmod +x ./gradlew
+          ./gradlew --no-daemon assembleDebug
+
+      - name: Upload debug APK
         uses: actions/upload-artifact@v4
         with:
-          name: FlinMobileLauncher-APK
+          name: FlinMobileLauncher-debug
           path: app/build/outputs/apk/debug/*.apk
           if-no-files-found: error
-          retention-days: 14
