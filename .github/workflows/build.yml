@@ -33,12 +33,10 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      # Android resource filenames must use lowercase letters, digits and underscores.
       - name: Fix invalid Android resource filenames
         shell: bash
         run: |
           set -euo pipefail
-
           RES_DIR="app/src/main/res"
 
           if [[ ! -d "$RES_DIR" ]]; then
@@ -46,7 +44,6 @@ jobs:
             exit 1
           fi
 
-          # Remove the known invalid extensionless file from the previous build error.
           if [[ -f "$RES_DIR/mipmap-hdpi/1" ]]; then
             rm -- "$RES_DIR/mipmap-hdpi/1"
             echo "Removed invalid extensionless resource: mipmap-hdpi/1"
@@ -57,32 +54,28 @@ jobs:
             name="$(basename "$file")"
 
             if [[ "$name" != *.* ]]; then
-              echo "::error file=$file::Resource file has no extension. Rename it to a valid .png, .jpg, .webp or .xml file, or remove it if it is unnecessary."
+              echo "::error file=$file::Resource file has no extension. Give it a valid extension or remove it if unnecessary."
               exit 1
             fi
 
             base="${name%.*}"
             ext="${name##*.}"
-
             normalized_base="$(printf '%s' "$base" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9_]/_/g')"
             normalized_ext="$(printf '%s' "$ext" | tr '[:upper:]' '[:lower:]')"
             target="$dir/$normalized_base.$normalized_ext"
 
             if [[ "$file" != "$target" ]]; then
               if [[ -e "$target" ]]; then
-                echo "::error file=$file::Cannot rename because target already exists: $target"
+                echo "::error file=$file::Rename collision: $target already exists"
                 exit 1
               fi
-
               mv -- "$file" "$target"
               echo "Renamed: $name -> $(basename "$target")"
             fi
           done < <(find "$RES_DIR" -type f -print0)
 
       - name: Build debug APK
-        run: |
-          chmod +x ./gradlew
-          ./gradlew --no-daemon assembleDebug
+        run: gradle --no-daemon assembleDebug
 
       - name: Upload debug APK
         uses: actions/upload-artifact@v4
