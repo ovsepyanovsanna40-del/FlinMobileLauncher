@@ -152,6 +152,8 @@ jobs:
           PYFIX
           # Fix upstream case mismatch: tracked header is rgba.h on Linux.
           sed -i 's/"RGBA.h"/"rgba.h"/' app/src/main/cpp/samp/game/rgba.cpp
+          # Upstream directory is vendor/raknet (lowercase), not vendor/RakNet.
+          sed -i 's#../vendor/RakNet/BitStream.h#../vendor/raknet/BitStream.h#' app/src/main/cpp/samp/voice_new/Network.h
           python3 - <<'PY'
           from pathlib import Path
           import xml.etree.ElementTree as ET
