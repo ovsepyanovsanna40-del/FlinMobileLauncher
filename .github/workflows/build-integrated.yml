@@ -33,7 +33,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          cat > app/src/main/java/com/samp/mobile/launcher/MainActivity.java <<'JAVA'
+          cat > app/src/main/java/com/samp/mobile/launcher/LauncherActivity.java <<'JAVA'
           package com.samp.mobile.launcher;
           import android.app.Activity;
           import android.content.Intent;
@@ -55,7 +55,7 @@ jobs:
           import java.io.FileOutputStream;
           import java.nio.charset.StandardCharsets;
 
-          public class MainActivity extends Activity {
+          public class LauncherActivity extends Activity {
               private static final int BG=Color.rgb(9,9,9), ORANGE=Color.rgb(255,107,0);
               private EditText nick;
               private GradientDrawable panel(int color, int stroke) {
@@ -167,7 +167,7 @@ jobs:
               if name=="com.samp.mobile.game.SAMP":
                   act.set(a+"exported","false")
                   for f in list(act.findall("intent-filter")): act.remove(f)
-              elif name==".launcher.MainActivity":
+              elif name==".launcher.LauncherActivity":
                   act.set(a+"screenOrientation","sensor")
                   act.set(a+"exported","true")
                   f=ET.SubElement(act,"intent-filter")
@@ -195,7 +195,6 @@ jobs:
               if end<0: raise SystemExit("Signing block layout changed")
               s=s[:start]+s[end+7:]
           s=s.replace("            signingConfig signingConfigs.release\n","")
-          s="\n".join(line for line in s.splitlines() if "com.github.amitshekhariitbhu:PRDownloader:1.0.1" not in line)+"\n"
 
           p.write_text(s)
           PY
