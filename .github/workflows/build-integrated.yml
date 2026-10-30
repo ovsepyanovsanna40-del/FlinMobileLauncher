@@ -129,21 +129,21 @@ jobs:
           from pathlib import Path
           p=Path("app/src/main/java/com/wardrumstudios/utils/WarMedia.java")
           s=p.read_text()
-          old='''                File externalFilesDir = getExternalFilesDir(null);
-                          String absolutePath = externalFilesDir.getAbsolutePath();
-                          this.baseDirectoryRoot = absolutePath.substring(0, absolutePath.indexOf("/Android"));
-                          return externalFilesDir.getAbsolutePath() + "/";
-                          //return Environment.getExternalStorageDirectory() + "/SAMPMOBILE/";'''
-          new='''                File sharedGameDir = new File(Environment.getExternalStorageDirectory(), "FlinMobile");
+          import re
+          pattern=r'                File externalFilesDir = getExternalFilesDir\(null\);.*?return externalFilesDir\.getAbsolutePath\(\) \+ "/";'
+          replacement='''                File sharedGameDir = new File(Environment.getExternalStorageDirectory(), "FlinMobile");
                           if (!sharedGameDir.exists() && !sharedGameDir.mkdirs()) {
                               return "";
                           }
                           this.baseDirectoryRoot = Environment.getExternalStorageDirectory().getAbsolutePath();
                           return sharedGameDir.getAbsolutePath() + "/";'''
-          if old not in s:
-              raise SystemExit("Could not locate original game data directory code")
-          p.write_text(s.replace(old,new))
+          s2,n=re.subn(pattern,lambda _: replacement,s,count=1,flags=re.S)
+          if n != 1:
+              raise SystemExit("Could not patch game data directory")
+          p.write_text(s2)
           PY
+          # Fix case-sensitive include mismatch in upstream native source.
+          sed -i 's/playerTabList\\.h/playertablist.h/g' app/src/main/cpp/samp/gui/gui.h
           python3 - <<'PY'
           from pathlib import Path
           import xml.etree.ElementTree as ET
