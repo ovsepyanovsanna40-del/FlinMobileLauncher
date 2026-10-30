@@ -307,6 +307,10 @@ class MainActivity : ComponentActivity() {
                             onProgress(0.85f + value * 0.10f, "Загрузка клиента... ${(value * 100).toInt()}%")
                         }
                     }
+                    val archiveInfo = packageManager.getPackageArchiveInfo(apkFile.absolutePath, 0)
+                        ?: throw IllegalStateException("Скачанный APK повреждён или не является приложением")
+                    getSharedPreferences("flin_prefs", MODE_PRIVATE).edit()
+                        .putString("client_package", archiveInfo.packageName).apply()
                     withContext(Dispatchers.Main) {
                         onProgress(0.96f, "Открываем установщик клиента...")
                         installApk(apkFile)
@@ -387,19 +391,43 @@ class MainActivity : ComponentActivity() {
 
     private fun launchGame(nickname: String) {
         saveNickname(nickname)
-        val candidates = listOf("com.flinrp", "com.flinrp.client", "com.flin.mobile", "com.flinmobile", "ru.flin.rp")
-        for (pkg in candidates) {
-            val intent = packageManager.getLaunchIntentForPackage(pkg)
-            if (intent != null) {
-                intent.putExtra("nickname", nickname)
-                intent.putExtra("name", nickname)
-                intent.putExtra("server", "$serverIp:$serverPort")
-                intent.putExtra("ip", serverIp)
-                intent.putExtra("port", serverPort)
-                startActivity(intent)
-                return
-            }
+        val prefs = getSharedPreferences("flin_prefs", MODE_PRIVATE)
+        val apkFile = File(downloadDir, "flinrp_full.apk")
+        val pkg = prefs.getString("client_package", null)
+            ?: if (apkFile.exists()) packageManager.getPackageArchiveInfo(apkFile.absolutePath, 0)?.packageName else null
+
+        if (pkg.isNullOrBlank()) {
+            Toast.makeText(this, "Сначала нажми «Установить игру», чтобы лаунчер скачал клиент.", Toast.LENGTH_LONG).show()
+            return
         }
-        Toast.makeText(this, "Игровой клиент не найден. Заверши установку flinrp_full.apk и попробуй снова.", Toast.LENGTH_LONG).show()
+
+        val installed = try {
+            packageManager.getApplicationInfo(pkg, 0)
+            true
+        } catch (_: Exception) {
+            false
+        }
+
+        if (!installed) {
+            if (apkFile.exists() && apkFile.length() > 0L) {
+                Toast.makeText(this, "Подтверди установку игрового клиента Android.", Toast.LENGTH_LONG).show()
+                installApk(apkFile)
+            } else {
+                Toast.makeText(this, "Файл клиента не найден. Повтори загрузку игры.", Toast.LENGTH_LONG).show()
+            }
+            return
+        }
+
+        val intent = packageManager.getLaunchIntentForPackage(pkg)
+        if (intent == null) {
+            Toast.makeText(this, "Не удалось открыть игровой клиент.", Toast.LENGTH_LONG).show()
+            return
+        }
+        intent.putExtra("nickname", nickname)
+        intent.putExtra("name", nickname)
+        intent.putExtra("server", "$serverIp:$serverPort")
+        intent.putExtra("ip", serverIp)
+        intent.putExtra("port", serverPort)
+        startActivity(intent)
     }
 }
