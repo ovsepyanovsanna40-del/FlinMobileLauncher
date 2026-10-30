@@ -41,6 +41,8 @@ jobs:
           import android.graphics.Typeface;
           import android.graphics.drawable.GradientDrawable;
           import android.os.Bundle;
+          import android.os.Environment;
+          import android.provider.Settings;
           import android.view.Gravity;
           import android.view.WindowManager;
           import android.widget.Button;
@@ -92,13 +94,24 @@ jobs:
                   setContentView(root);
               }
               private void startGame() {
+                  if (android.os.Build.VERSION.SDK_INT >= 30 && !Environment.isExternalStorageManager()) {
+                      try {
+                          Intent permission = new Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION);
+                          permission.setData(android.net.Uri.parse("package:" + getPackageName()));
+                          startActivity(permission);
+                      } catch (Exception e) {
+                          startActivity(new Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION));
+                      }
+                      Toast.makeText(this, "Разреши доступ к файлам, чтобы кэш сохранялся после удаления игры", Toast.LENGTH_LONG).show();
+                      return;
+                  }
                   String n=nick.getText().toString().trim();
                   if(!n.matches("[A-Za-z0-9_]{3,24}")) {
                       Toast.makeText(this,"Ник: 3–24 символа, латиница, цифры и _",Toast.LENGTH_LONG).show(); return;
                   }
                   getPreferences(0).edit().putString("nickname",n).apply();
                   try {
-                      File dir=getExternalFilesDir(null); if(dir==null)throw new Exception("Нет папки данных");
+                      File dir=new File(Environment.getExternalStorageDirectory(), "FlinMobile");\n                      if(!dir.exists() && !dir.mkdirs()) throw new Exception("Не удалось создать /storage/emulated/0/FlinMobile");
                       String ini="[client]\nhost = 195.18.27.226\nport = 3146\nname = "+n+"\nautoaim = 0\n\n[debug]\ndebug = false\nonline = true\n";
                       try(FileOutputStream out=new FileOutputStream(new File(dir,"settings.ini"))) {
                           out.write(ini.getBytes(StandardCharsets.UTF_8));
@@ -110,6 +123,26 @@ jobs:
               }
           }
           JAVA
+          # Keep downloaded GTA/SA-MP data in shared internal storage, not Android/data.
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path("app/src/main/java/com/wardrumstudios/utils/WarMedia.java")
+          s=p.read_text()
+          old='''                File externalFilesDir = getExternalFilesDir(null);
+                          String absolutePath = externalFilesDir.getAbsolutePath();
+                          this.baseDirectoryRoot = absolutePath.substring(0, absolutePath.indexOf("/Android"));
+                          return externalFilesDir.getAbsolutePath() + "/";
+                          //return Environment.getExternalStorageDirectory() + "/SAMPMOBILE/";'''
+          new='''                File sharedGameDir = new File(Environment.getExternalStorageDirectory(), "FlinMobile");
+                          if (!sharedGameDir.exists() && !sharedGameDir.mkdirs()) {
+                              return "";
+                          }
+                          this.baseDirectoryRoot = Environment.getExternalStorageDirectory().getAbsolutePath();
+                          return sharedGameDir.getAbsolutePath() + "/";'''
+          if old not in s:
+              raise SystemExit("Could not locate original game data directory code")
+          p.write_text(s.replace(old,new))
+          PY
           python3 - <<'PY'
           from pathlib import Path
           import xml.etree.ElementTree as ET
