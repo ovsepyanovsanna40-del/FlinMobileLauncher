@@ -30,7 +30,6 @@ jobs:
           accept-android-sdk-licenses: true
           packages: 'platform-tools platforms;android-34 build-tools;34.0.0'
 
-      # Pin Gradle to 8.2: this project/plugin setup is not compatible with Gradle 9.x.
       - name: Set up Gradle 8.2
         uses: gradle/actions/setup-gradle@v4
         with:
@@ -76,6 +75,36 @@ jobs:
               echo "Renamed: $name -> $(basename "$target")"
             fi
           done < <(find "$RES_DIR" -type f -print0)
+
+      # Supply valid fallback launcher icons if the project has none.
+      - name: Add missing launcher icons
+        shell: bash
+        run: |
+          set -euo pipefail
+          RES_DIR="app/src/main/res"
+          ICON_DIR="$RES_DIR/mipmap-anydpi"
+          mkdir -p "$ICON_DIR"
+
+          for icon in ic_launcher ic_launcher_round; do
+            if ! find "$RES_DIR" -type f \( -name "$icon.png" -o -name "$icon.webp" -o -name "$icon.xml" \) -print -quit | grep -q .; then
+              cat > "$ICON_DIR/$icon.xml" <<'XML'
+          <?xml version="1.0" encoding="utf-8"?>
+          <vector xmlns:android="http://schemas.android.com/apk/res/android"
+              android:width="48dp"
+              android:height="48dp"
+              android:viewportWidth="48"
+              android:viewportHeight="48">
+              <path
+                  android:fillColor="#263B80"
+                  android:pathData="M0,0h48v48h-48z" />
+              <path
+                  android:fillColor="#FFFFFF"
+                  android:pathData="M12,12h24v6h-18v6h15v6h-15v6h18v6h-24z" />
+          </vector>
+          XML
+              echo "Created fallback resource: $ICON_DIR/$icon.xml"
+            fi
+          done
 
       - name: Build debug APK
         run: gradle --no-daemon assembleDebug
