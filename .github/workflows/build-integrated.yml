@@ -35,93 +35,129 @@ jobs:
           set -euo pipefail
           cat > app/src/main/java/com/samp/mobile/launcher/LauncherActivity.java <<'JAVA'
           package com.samp.mobile.launcher;
-          import android.app.Activity;
-          import android.content.Intent;
-          import android.graphics.Color;
-          import android.graphics.Typeface;
-          import android.graphics.drawable.GradientDrawable;
-          import android.os.Bundle;
-          import android.os.Environment;
+          import android.app.*;
+          import android.content.*;
+          import android.graphics.*;
+          import android.graphics.drawable.*;
+          import android.net.Uri;
+          import android.os.*;
           import android.provider.Settings;
-          import android.view.Gravity;
-          import android.view.WindowManager;
-          import android.widget.Button;
-          import android.widget.EditText;
-          import android.widget.LinearLayout;
-          import android.widget.TextView;
-          import android.widget.Toast;
+          import android.view.*;
+          import android.view.inputmethod.InputMethodManager;
+          import android.widget.*;
           import com.samp.mobile.game.SAMP;
-          import java.io.File;
-          import java.io.FileOutputStream;
+          import java.io.*;
           import java.nio.charset.StandardCharsets;
 
           public class LauncherActivity extends Activity {
-              private static final int BG=Color.rgb(9,9,9), ORANGE=Color.rgb(255,107,0);
-              private EditText nick;
-              private GradientDrawable panel(int color, int stroke) {
-                  GradientDrawable d=new GradientDrawable(); d.setColor(color); d.setCornerRadius(24);
-                  if(stroke!=0)d.setStroke(2,stroke); return d;
+            int orange=0xffff8126, pale=0xffffd1a4; EditText nick;
+            GradientDrawable shape(int color,int stroke,int radius){
+              GradientDrawable d=new GradientDrawable(); d.setColor(color); d.setCornerRadius(radius);
+              if(stroke!=0)d.setStroke(dp(1),stroke); return d;
+            }
+            int dp(float v){return (int)(v*getResources().getDisplayMetrics().density+.5f);}
+            TextView label(String s,int size,int color,boolean bold){
+              TextView t=new TextView(this);t.setText(s);t.setTextSize(size);t.setTextColor(color);
+              if(bold)t.setTypeface(Typeface.DEFAULT,Typeface.BOLD);return t;
+            }
+            LinearLayout column(){LinearLayout l=new LinearLayout(this);l.setOrientation(1);return l;}
+            LinearLayout.LayoutParams lp(int w,int h){return new LinearLayout.LayoutParams(w<0?w:dp(w),h<0?h:dp(h));}
+            TextView button(String s,boolean primary){
+              TextView b=label(s,primary?19:14,Color.WHITE,true);b.setGravity(Gravity.CENTER);
+              b.setPadding(dp(12),dp(8),dp(12),dp(8));
+              b.setBackground(shape(primary?orange:0xdd120d0a,primary?0xffffbd75:0xff70452b,dp(13)));
+              return b;
+            }
+            @Override public void onCreate(Bundle b){
+              super.onCreate(b);setRequestedOrientation(0);
+              getWindow().setStatusBarColor(Color.rgb(12,7,4));getWindow().setNavigationBarColor(Color.BLACK);
+              FrameLayout root=new FrameLayout(this);
+              GradientDrawable bg=new GradientDrawable(GradientDrawable.Orientation.TL_BR,
+                new int[]{0xff160b06,0xff54200c,0xff120906,0xff050403});root.setBackground(bg);
+              // ember-like decorative glow behind the launcher content
+              View glow=new View(this);GradientDrawable gd=new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,
+                new int[]{0x88ff6a18,0x22a52b08,0x00000000});glow.setBackground(gd);
+              root.addView(glow,new FrameLayout.LayoutParams(-1,-1));
+              LinearLayout page=column();page.setPadding(dp(20),dp(12),dp(20),dp(10));
+              root.addView(page,new FrameLayout.LayoutParams(-1,-1));
+              LinearLayout top=new LinearLayout(this);top.setGravity(Gravity.CENTER_VERTICAL);
+              TextView mark=label("X",22,Color.BLACK,true);mark.setGravity(Gravity.CENTER);
+              mark.setBackground(shape(orange,0,dp(10)));top.addView(mark,lp(36,34));
+              TextView brand=label("  Flin Mobile",18,Color.WHITE,true);top.addView(brand);
+              top.addView(new View(this),new LinearLayout.LayoutParams(0,1,1));
+              top.addView(label("32 мс   •   v1.0",13,pale,false));page.addView(top,lp(-1,40));
+              TextView title=label("П Р О Е К Т   X",42,0xffffa15c,true);title.setGravity(Gravity.CENTER);
+              title.setShadowLayer(dp(9),0,dp(2),0xffff4a0a);page.addView(title,new LinearLayout.LayoutParams(-1,0,1.0f));
+              LinearLayout content=new LinearLayout(this);content.setGravity(Gravity.CENTER_VERTICAL);
+              page.addView(content,new LinearLayout.LayoutParams(-1,0,2.8f));
+              LinearLayout left=column();left.setPadding(dp(4),0,dp(10),0);
+              content.addView(left,new LinearLayout.LayoutParams(0,-1,1.05f));
+              left.addView(label("Сервера",17,Color.WHITE,true),lp(-1,30));
+              LinearLayout server=column();server.setPadding(dp(13),dp(10),dp(13),dp(10));
+              server.setBackground(shape(0xdd21130c,orange,dp(15)));
+              server.addView(label("Flin Mobile #1",16,Color.WHITE,true));
+              server.addView(label("● ● ● ● ●",10,0xff7c5a42,false),lp(-1,20));
+              ProgressBar online=new ProgressBar(this,null,android.R.attr.progressBarStyleHorizontal);
+              online.setMax(100);online.setProgress(24);online.setProgressTintList(android.content.res.ColorStateList.valueOf(0xff43c978));
+              online.setProgressBackgroundTintList(android.content.res.ColorStateList.valueOf(0xff60432f));
+              server.addView(online,lp(-1,8));
+              LinearLayout stats=new LinearLayout(this);stats.setPadding(0,dp(9),0,0);
+              stats.addView(label("Ping 32 мс",12,0xffd8c5b5,false));
+              stats.addView(new View(this),new LinearLayout.LayoutParams(0,1,1));
+              stats.addView(label("Role Play",12,0xffffad66,true));server.addView(stats);
+              server.addView(label("Игровой режим: RP",12,0xffb7a69a,false),lp(-1,22));
+              left.addView(server,lp(-1,112));
+              TextView second=label("Flin Mobile #2\nСкоро открытие",14,0xffc8b7aa,true);
+              second.setPadding(dp(13),dp(10),dp(13),dp(8));second.setBackground(shape(0xbb21150f,0xff68452f,dp(14)));
+              LinearLayout.LayoutParams sp=lp(-1,62);sp.topMargin=dp(9);left.addView(second,sp);
+              LinearLayout right=column();right.setPadding(dp(10),0,dp(4),0);
+              content.addView(right,new LinearLayout.LayoutParams(0,-1,1.0f));
+              right.addView(label("Ваш ник",17,Color.WHITE,true),lp(-1,30));
+              nick=new EditText(this);nick.setSingleLine(true);nick.setTextSize(16);nick.setTextColor(Color.WHITE);
+              nick.setHintTextColor(0xff9b8779);nick.setHint("Nick_Name");nick.setPadding(dp(14),0,dp(12),0);
+              nick.setBackground(shape(0xdd21130c,0xff80502f,dp(13)));
+              nick.setText(getPreferences(0).getString("nickname",""));
+              right.addView(nick,lp(-1,52));
+              TextView play=button("ИГРАТЬ\nПодключиться к серверу #1",true);
+              play.setGravity(Gravity.CENTER);LinearLayout.LayoutParams pp=lp(-1,72);pp.topMargin=dp(12);right.addView(play,pp);
+              play.setOnClickListener(v->startGame());
+              LinearLayout actions=new LinearLayout(this);LinearLayout.LayoutParams ap=lp(-1,42);ap.topMargin=dp(9);right.addView(actions,ap);
+              TextView settings=button("Настройки",false),discord=button("Discord",false);
+              actions.addView(settings,new LinearLayout.LayoutParams(0,-1,1));actions.addView(discord,new LinearLayout.LayoutParams(0,-1,1));
+              settings.setOnClickListener(v->new AlertDialog.Builder(this).setTitle("Настройки")
+                .setMessage("Сервер: 195.18.27.226:3146\nВерсия клиента: Flin Mobile")
+                .setPositiveButton("ОК",null).show());
+              discord.setOnClickListener(v->{try{startActivity(new Intent(Intent.ACTION_VIEW,Uri.parse("https://discord.com/")));}catch(Exception e){}});
+              TextView footer=label("F L I N   M O B I L E",18,0xffd66a2c,true);footer.setGravity(Gravity.CENTER);
+              page.addView(footer,lp(-1,30));
+              LinearLayout bottom=new LinearLayout(this);bottom.setOrientation(1);
+              LinearLayout cap=new LinearLayout(this);cap.setGravity(Gravity.CENTER_VERTICAL);
+              cap.addView(label("Загрузка кэша",12,Color.WHITE,true));
+              cap.addView(new View(this),new LinearLayout.LayoutParams(0,1,1));
+              cap.addView(label("Ожидание запуска  •  Flin RP",11,0xffd4c2b3,false));
+              bottom.addView(cap,lp(-1,20));
+              ProgressBar cache=new ProgressBar(this,null,android.R.attr.progressBarStyleHorizontal);
+              cache.setMax(100);cache.setProgress(0);cache.setProgressTintList(android.content.res.ColorStateList.valueOf(orange));
+              bottom.addView(cache,lp(-1,7));page.addView(bottom,lp(-1,28));
+              setContentView(root);
+            }
+            void startGame(){
+              if(Build.VERSION.SDK_INT>=30&&!Environment.isExternalStorageManager()){
+                try{Intent i=new Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION);i.setData(Uri.parse("package:"+getPackageName()));startActivity(i);}
+                catch(Exception e){startActivity(new Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION));}
+                Toast.makeText(this,"Разреши доступ к файлам для сохранения игрового кэша",Toast.LENGTH_LONG).show();return;
               }
-              private TextView text(String s,int size,int color,boolean bold) {
-                  TextView t=new TextView(this); t.setText(s); t.setTextSize(size); t.setTextColor(color);
-                  t.setGravity(Gravity.CENTER); if(bold)t.setTypeface(Typeface.DEFAULT,Typeface.BOLD); return t;
-              }
-              @Override public void onCreate(Bundle b) {
-                  super.onCreate(b); getWindow().setStatusBarColor(BG); getWindow().setNavigationBarColor(BG);
-                  getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
-                  LinearLayout root=new LinearLayout(this); root.setOrientation(1); root.setGravity(Gravity.CENTER_HORIZONTAL);
-                  root.setPadding(24,24,24,20);
-                  GradientDrawable bg=new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,new int[]{0xff301407,BG,Color.BLACK});
-                  root.setBackground(bg);
-                  TextView brand=text("FLIN MOBILE",25,Color.WHITE,true); brand.setLetterSpacing(.12f);
-                  root.addView(brand,new LinearLayout.LayoutParams(-1,54));
-                  root.addView(text("ROLE PLAY  •  MOBILE",11,ORANGE,true),new LinearLayout.LayoutParams(-1,26));
-                  LinearLayout hero=new LinearLayout(this); hero.setOrientation(1); hero.setGravity(Gravity.CENTER);
-                  hero.setBackground(panel(0xff231610,ORANGE));
-                  LinearLayout.LayoutParams hp=new LinearLayout.LayoutParams(-1,0,1); hp.setMargins(0,24,0,20); root.addView(hero,hp);
-                  hero.addView(text("FLIN",52,Color.WHITE,true));
-                  hero.addView(text("ТВОЯ ИГРА. ТВОЯ ИСТОРИЯ.",12,ORANGE,true));
-                  root.addView(text("СЕРВЕР FLIN ROLE PLAY",13,Color.LTGRAY,true),new LinearLayout.LayoutParams(-1,34));
-                  root.addView(text("195.18.27.226:3146",19,Color.WHITE,true),new LinearLayout.LayoutParams(-1,38));
-                  nick=new EditText(this); nick.setSingleLine(true); nick.setTextColor(Color.WHITE); nick.setHintTextColor(Color.GRAY);
-                  nick.setHint("Игровой никнейм"); nick.setText(getPreferences(0).getString("nickname",""));
-                  nick.setPadding(18,8,18,8); nick.setBackground(panel(0xff1f1f1f,ORANGE));
-                  LinearLayout.LayoutParams np=new LinearLayout.LayoutParams(-1,56); np.setMargins(0,20,0,14); root.addView(nick,np);
-                  Button play=new Button(this); play.setText("ИГРАТЬ  ▶"); play.setTextColor(Color.WHITE); play.setTextSize(16);
-                  play.setTypeface(Typeface.DEFAULT,Typeface.BOLD); play.setAllCaps(false); play.setBackground(panel(ORANGE,0));
-                  root.addView(play,new LinearLayout.LayoutParams(-1,58)); play.setOnClickListener(v->startGame());
-                  root.addView(text("FLIN MOBILE  •  ONE APP",10,Color.GRAY,true),new LinearLayout.LayoutParams(-1,42));
-                  setContentView(root);
-              }
-              private void startGame() {
-                  if (android.os.Build.VERSION.SDK_INT >= 30 && !Environment.isExternalStorageManager()) {
-                      try {
-                          Intent permission = new Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION);
-                          permission.setData(android.net.Uri.parse("package:" + getPackageName()));
-                          startActivity(permission);
-                      } catch (Exception e) {
-                          startActivity(new Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION));
-                      }
-                      Toast.makeText(this, "Разреши доступ к файлам, чтобы кэш сохранялся после удаления игры", Toast.LENGTH_LONG).show();
-                      return;
-                  }
-                  String n=nick.getText().toString().trim();
-                  if(!n.matches("[A-Za-z0-9_]{3,24}")) {
-                      Toast.makeText(this,"Ник: 3–24 символа, латиница, цифры и _",Toast.LENGTH_LONG).show(); return;
-                  }
-                  getPreferences(0).edit().putString("nickname",n).apply();
-                  try {
-                      File dir=new File(Environment.getExternalStorageDirectory(), "FlinMobile");
-                      if(!dir.exists() && !dir.mkdirs()) throw new Exception("Не удалось создать /storage/emulated/0/FlinMobile");
-                      String ini="[client]\nhost = 195.18.27.226\nport = 3146\nname = "+n+"\nautoaim = 0\n\n[debug]\ndebug = false\nonline = true\n";
-                      try(FileOutputStream out=new FileOutputStream(new File(dir,"settings.ini"))) {
-                          out.write(ini.getBytes(StandardCharsets.UTF_8));
-                      }
-                      startActivity(new Intent(this,SAMP.class));
-                  } catch(Exception e) {
-                      Toast.makeText(this,"Ошибка запуска: "+e.getMessage(),Toast.LENGTH_LONG).show();
-                  }
-              }
+              String n=nick.getText().toString().trim();
+              if(!n.matches("[A-Za-z0-9_]{3,24}")){Toast.makeText(this,"Ник: 3–24 символа, латиница, цифры и _",Toast.LENGTH_LONG).show();return;}
+              getPreferences(0).edit().putString("nickname",n).apply();
+              try{
+                File dir=new File(Environment.getExternalStorageDirectory(),"FlinMobile");
+                if(!dir.exists()&&!dir.mkdirs())throw new Exception("Не удалось создать папку FlinMobile");
+                String ini="[client]\nhost = 195.18.27.226\nport = 3146\nname = "+n+"\nautoaim = 0\n\n[debug]\ndebug = false\nonline = true\n";
+                try(FileOutputStream out=new FileOutputStream(new File(dir,"settings.ini"))){out.write(ini.getBytes(StandardCharsets.UTF_8));}
+                startActivity(new Intent(this,SAMP.class));
+              }catch(Exception e){Toast.makeText(this,"Ошибка запуска: "+e.getMessage(),Toast.LENGTH_LONG).show();}
+            }
           }
           JAVA
           # Keep downloaded GTA/SA-MP data in shared internal storage, not Android/data.
@@ -168,7 +204,7 @@ jobs:
                   act.set(a+"exported","false")
                   for f in list(act.findall("intent-filter")): act.remove(f)
               elif name==".launcher.LauncherActivity":
-                  act.set(a+"screenOrientation","sensor")
+                  act.set(a+"screenOrientation","landscape")
                   act.set(a+"exported","true")
                   f=ET.SubElement(act,"intent-filter")
                   ET.SubElement(f,"action",{a+"name":"android.intent.action.MAIN"})
