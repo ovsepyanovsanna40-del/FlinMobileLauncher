@@ -295,15 +295,16 @@ jobs:
           p.write_text(s)
           PYAUTO
 
-      - name: Add FLIN reference image asset
+      - name: Add FLIN reference image asset (optional)
         working-directory: client
         shell: bash
         run: |
           set -euo pipefail
           mkdir -p app/src/main/res/drawable-nodpi
-          curl -L --fail --retry 3 --connect-timeout 20 \\
-            'https://i.postimg.cc/tYNZF1Jv/a-A2ew9dx-Juuqz-Qxdcd0BVww-Jzzeyu-SS65j-EKn-MFFrmb-Gf5bb-O-QILB-T2Po-Lio-Pz7-I-4cfe-YVx-Kmao-Pv3n-X3x.jpg' \\
-            -o app/src/main/res/drawable-nodpi/flin_reference.jpg
+          if ! curl -fLsS --retry 2 --connect-timeout 20 'https://i.postimg.cc/tYNZF1Jv/a-A2ew9dx-Juuqz-Qxdcd0BVww-Jzzeyu-SS65j-EKn-MFFrmb-Gf5bb-O-QILB-T2Po-Lio-Pz7-I-4cfe-YVx-Kmao-Pv3n-X3x.jpg' -o app/src/main/res/drawable-nodpi/flin_reference.jpg; then
+            echo 'Image host unavailable; continuing build without optional reference image.'
+            rm -f app/src/main/res/drawable-nodpi/flin_reference.jpg
+          fi
 
       - name: Configure dependency repositories
         working-directory: client
