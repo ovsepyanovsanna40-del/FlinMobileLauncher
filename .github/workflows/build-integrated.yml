@@ -208,9 +208,8 @@ jobs:
                   act.set(a+"exported","true")
               elif name in (".launcher.SplashActivity",".launcher.UpdateActivity",".launcher.MainActivity"):
                   act.set(a+"screenOrientation","landscape")
-                  f=ET.SubElement(act,"intent-filter")
-                  ET.SubElement(f,"action",{a+"name":"android.intent.action.MAIN"})
-                  ET.SubElement(f,"category",{a+"name":"android.intent.category.LAUNCHER"})
+              if act.findall("intent-filter") and a+"exported" not in act.attrib:
+                  act.set(a+"exported","true")
           if not any(x.get(a+"name") in (".launcher.LauncherActivity", "com.samp.mobile.launcher.LauncherActivity") for x in app.findall("activity")):
               act=ET.SubElement(app,"activity",{a+"name":".launcher.LauncherActivity",a+"screenOrientation":"sensor",a+"exported":"true"})
               f=ET.SubElement(act,"intent-filter")
