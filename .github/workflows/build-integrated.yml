@@ -259,6 +259,42 @@ jobs:
           tree.write(p,encoding="utf-8",xml_declaration=True)
           PY
 
+      - name: Force direct connection to FLIN server
+        working-directory: client
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PYAUTO'
+          from pathlib import Path
+          import re
+          # The native SA-MP client previously ignored the INI and connected to an upstream server.
+          # Load FLIN settings and use their host/port directly, bypassing the stock server browser.
+          p=Path("app/src/main/cpp/samp/main.cpp")
+          s=p.read_text(encoding="utf-8-sig")
+          old='pNetGame = new CNetGame("94.23.168.153", 2305, pSettings->Get().szNickName, pSettings->Get().szPassword);'
+          new='''if (!pSettings) {
+                  ReadSettingFile();
+              }
+              pNetGame = new CNetGame(pSettings->Get().szHost, pSettings->Get().iPort,
+                                      pSettings->Get().szNickName, pSettings->Get().szPassword);'''
+          if old not in s:
+              raise SystemExit("Native hardcoded server connection line not found")
+          s=s.replace(old,new,1)
+          p.write_text(s,encoding="utf-8")
+          # Native CSettings reads <game storage>/SAMP/settings.ini. Write there, not at the root.
+          p=Path("app/src/main/java/com/samp/mobile/launcher/LauncherActivity.java")
+          s=p.read_text()
+          old='''File dir=new File(Environment.getExternalStorageDirectory(),"FlinMobile");
+                if(!dir.exists()&&!dir.mkdirs())throw new Exception("Не удалось создать папку FlinMobile");'''
+          new='''File dir=new File(Environment.getExternalStorageDirectory(),"FlinMobile/SAMP");
+                if(!dir.exists()&&!dir.mkdirs())throw new Exception("Не удалось создать папку FlinMobile/SAMP");'''
+          if old not in s:
+              raise SystemExit("Launcher settings directory block not found")
+          s=s.replace(old,new,1)
+          s=s.replace('new File(dir,"settings.ini")','new File(dir,"settings.ini")',1)
+          p.write_text(s)
+          PYAUTO
+
       - name: Add FLIN reference image asset
         working-directory: client
         shell: bash
