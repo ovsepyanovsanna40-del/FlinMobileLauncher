@@ -183,6 +183,24 @@ jobs:
           s=s.replace(old, "if(false)", 1)
           p.write_text(s)
           PYSPLASH
+          # Disable upstream self-APK replacement: its package/signing certificate
+          # does not match this custom FLIN build and Android rejects the install.
+          python3 - <<'PYUPDATE'
+          from pathlib import Path
+          import re
+          p=Path("app/src/main/java/com/samp/mobile/launcher/UpdateService.java")
+          s=p.read_text()
+          pattern=r'public boolean isGameUpdateExists\(\)\s*\{.*?\n    \}'
+          replacement='''public boolean isGameUpdateExists() {
+                  // FLIN is a custom launcher build. Never install the upstream update.apk:
+                  // it is signed for the original package and causes Android package conflicts.
+                  return false;
+              }'''
+          s2,n=re.subn(pattern,lambda _: replacement,s,count=1,flags=re.S)
+          if n != 1:
+              raise SystemExit("Could not patch upstream launcher self-update check")
+          p.write_text(s2)
+          PYUPDATE
           # Keep downloaded GTA/SA-MP data in shared internal storage, not Android/data.
           python3 - <<'PY'
           from pathlib import Path
