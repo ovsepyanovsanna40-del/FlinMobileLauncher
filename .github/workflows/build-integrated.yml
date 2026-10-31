@@ -90,21 +90,21 @@ jobs:
                 }
               };
               root.addView(art,new FrameLayout.LayoutParams(-1,-1));
-              LinearLayout page=column();page.setPadding(dp(20),dp(12),dp(20),dp(10));
+              LinearLayout page=column();page.setPadding(dp(14),dp(5),dp(14),dp(3));
               root.addView(page,new FrameLayout.LayoutParams(-1,-1));
               LinearLayout top=new LinearLayout(this);top.setGravity(Gravity.CENTER_VERTICAL);
               TextView mark=label("F",22,Color.BLACK,true);mark.setGravity(Gravity.CENTER);
               mark.setBackground(shape(orange,0,dp(10)));top.addView(mark,lp(36,34));
               TextView brand=label("  FLIN MOBILE",18,Color.WHITE,true);top.addView(brand);
               top.addView(new View(this),new LinearLayout.LayoutParams(0,1,1));
-              top.addView(label("● ONLINE     32 мс     v1.0",12,pale,true));page.addView(top,lp(-1,40));
-              TextView title=label("FLIN",54,0xffffa45b,true);title.setGravity(Gravity.CENTER);title.setLetterSpacing(0.18f);title.setShadowLayer(dp(18),0,dp(3),0xffff5a12);TextView subtitle=label("ROLEPLAY  /  MOBILE EXPERIENCE",11,0xffd6a17b,true);subtitle.setGravity(Gravity.CENTER);subtitle.setLetterSpacing(0.22f);LinearLayout hero=column();hero.setGravity(Gravity.CENTER);hero.addView(title);hero.addView(subtitle,lp(-1,24));page.addView(hero,new LinearLayout.LayoutParams(-1,0,0.8f));
+              top.addView(label("● ONLINE     32 мс     v1.0",12,pale,true));page.addView(top,lp(-1,32));
+              TextView title=label("FLIN",44,0xffffa45b,true);title.setGravity(Gravity.CENTER);title.setLetterSpacing(0.18f);title.setShadowLayer(dp(18),0,dp(3),0xffff5a12);TextView subtitle=label("ROLEPLAY  /  MOBILE EXPERIENCE",11,0xffd6a17b,true);subtitle.setGravity(Gravity.CENTER);subtitle.setLetterSpacing(0.22f);LinearLayout hero=column();hero.setGravity(Gravity.CENTER);hero.addView(title);hero.addView(subtitle,lp(-1,24));page.addView(hero,lp(-1,62));
               title.setShadowLayer(dp(18),0,dp(3),0xffff5a12);
               LinearLayout content=new LinearLayout(this);content.setGravity(Gravity.CENTER_VERTICAL);
-              page.addView(content,new LinearLayout.LayoutParams(-1,0,2.8f));
+              page.addView(content,new LinearLayout.LayoutParams(-1,0,1.0f));
               LinearLayout left=column();left.setPadding(dp(4),0,dp(10),0);
               content.addView(left,new LinearLayout.LayoutParams(0,-1,1.05f));
-              left.addView(label("ВЫБОР СЕРВЕРА",12,0xffffa66b,true),lp(-1,30));
+              left.addView(label("ВЫБОР СЕРВЕРА",11,0xffffa66b,true),lp(-1,23));
               LinearLayout server=column();server.setPadding(dp(13),dp(10),dp(13),dp(10));
               server.setBackground(shape(0xee1a100c,0xffb95b2a,dp(18)));
               server.addView(label("Flin Mobile #1",16,Color.WHITE,true));
@@ -118,10 +118,10 @@ jobs:
               stats.addView(new View(this),new LinearLayout.LayoutParams(0,1,1));
               stats.addView(label("Role Play",12,0xffffad66,true));server.addView(stats);
               server.addView(label("Игровой режим: RP",12,0xffb7a69a,false),lp(-1,22));
-              left.addView(server,lp(-1,112));
+              left.addView(server,lp(-1,92));
               TextView second=label("Flin Mobile #2\nСкоро открытие",14,0xffc8b7aa,true);
               second.setPadding(dp(13),dp(10),dp(13),dp(8));second.setBackground(shape(0xbb21150f,0xff68452f,dp(14)));
-              LinearLayout.LayoutParams sp=lp(-1,62);sp.topMargin=dp(9);left.addView(second,sp);
+              LinearLayout.LayoutParams sp=lp(-1,48);sp.topMargin=dp(9);left.addView(second,sp);
               LinearLayout right=column();right.setPadding(dp(10),0,dp(4),0);
               content.addView(right,new LinearLayout.LayoutParams(0,-1,1.0f));
               right.addView(label("ИГРОВОЙ ПРОФИЛЬ",12,0xffffa66b,true),lp(-1,30));
@@ -131,7 +131,7 @@ jobs:
               nick.setText(getPreferences(0).getString("nickname",""));
               right.addView(nick,lp(-1,52));
               TextView play=button("УСТАНОВИТЬ ИГРУ\nЗагрузить кэш и запустить Flin RP",true);
-              play.setGravity(Gravity.CENTER);LinearLayout.LayoutParams pp=lp(-1,72);pp.topMargin=dp(12);right.addView(play,pp);
+              play.setGravity(Gravity.CENTER);LinearLayout.LayoutParams pp=lp(-1,72);pp.topMargin=dp(12);pp.height=dp(62);right.addView(play,pp);
               play.setOnClickListener(v->startGame());
               LinearLayout actions=new LinearLayout(this);LinearLayout.LayoutParams ap=lp(-1,42);ap.topMargin=dp(9);right.addView(actions,ap);
               TextView settings=button("Настройки",false),discord=button("Discord",false);
@@ -141,7 +141,7 @@ jobs:
                 .setPositiveButton("ОК",null).show());
               discord.setOnClickListener(v->{try{startActivity(new Intent(Intent.ACTION_VIEW,Uri.parse("https://discord.com/")));}catch(Exception e){}});
               TextView footer=label("BUILT FOR ROLEPLAY",11,0xffa97855,true);footer.setGravity(Gravity.CENTER);
-              page.addView(footer,lp(-1,30));
+              page.addView(footer,lp(-1,20));
               LinearLayout bottom=new LinearLayout(this);bottom.setOrientation(1);
               LinearLayout cap=new LinearLayout(this);cap.setGravity(Gravity.CENTER_VERTICAL);
               cap.addView(label("Загрузка кэша",12,Color.WHITE,true));
@@ -150,7 +150,7 @@ jobs:
               bottom.addView(cap,lp(-1,20));
               ProgressBar cache=new ProgressBar(this,null,android.R.attr.progressBarStyleHorizontal);
               cache.setMax(100);cache.setProgress(0);cache.setProgressTintList(android.content.res.ColorStateList.valueOf(orange));
-              bottom.addView(cache,lp(-1,7));page.addView(bottom,lp(-1,28));
+              bottom.addView(cache,lp(-1,7));page.addView(bottom,lp(-1,22));
               setContentView(root);
             }
             void startGame(){
@@ -172,6 +172,17 @@ jobs:
             }
           }
           JAVA
+          # Bypass upstream signature gate for our own debug-signed Flin build.
+          python3 - <<'PYSPLASH'
+          from pathlib import Path
+          p=Path("app/src/main/java/com/samp/mobile/launcher/SplashActivity.java")
+          s=p.read_text()
+          old="if(!SignatureChecker.isSignatureValid(this, getPackageName()))"
+          if old not in s:
+              raise SystemExit("SplashActivity signature check not found")
+          s=s.replace(old, "if(false)", 1)
+          p.write_text(s)
+          PYSPLASH
           # Keep downloaded GTA/SA-MP data in shared internal storage, not Android/data.
           python3 - <<'PY'
           from pathlib import Path
