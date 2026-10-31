@@ -118,7 +118,7 @@ jobs:
               nick.setBackground(shape(0xdd21130c,0xff80502f,dp(13)));
               nick.setText(getPreferences(0).getString("nickname",""));
               right.addView(nick,lp(-1,52));
-              TextView play=button("ИГРАТЬ\nПодключиться к серверу #1",true);
+              TextView play=button("УСТАНОВИТЬ ИГРУ\nЗагрузить кэш и запустить Flin RP",true);
               play.setGravity(Gravity.CENTER);LinearLayout.LayoutParams pp=lp(-1,72);pp.topMargin=dp(12);right.addView(play,pp);
               play.setOnClickListener(v->startGame());
               LinearLayout actions=new LinearLayout(this);LinearLayout.LayoutParams ap=lp(-1,42);ap.topMargin=dp(9);right.addView(actions,ap);
@@ -155,7 +155,7 @@ jobs:
                 if(!dir.exists()&&!dir.mkdirs())throw new Exception("Не удалось создать папку FlinMobile");
                 String ini="[client]\nhost = 195.18.27.226\nport = 3146\nname = "+n+"\nautoaim = 0\n\n[debug]\ndebug = false\nonline = true\n";
                 try(FileOutputStream out=new FileOutputStream(new File(dir,"settings.ini"))){out.write(ini.getBytes(StandardCharsets.UTF_8));}
-                startActivity(new Intent(this,SAMP.class));
+                Intent setup=new Intent(this,SplashActivity.class); startActivity(setup); finish();
               }catch(Exception e){Toast.makeText(this,"Ошибка запуска: "+e.getMessage(),Toast.LENGTH_LONG).show();}
             }
           }
@@ -206,6 +206,8 @@ jobs:
               elif name==".launcher.LauncherActivity":
                   act.set(a+"screenOrientation","landscape")
                   act.set(a+"exported","true")
+              elif name in (".launcher.SplashActivity",".launcher.UpdateActivity",".launcher.MainActivity"):
+                  act.set(a+"screenOrientation","landscape")
                   f=ET.SubElement(act,"intent-filter")
                   ET.SubElement(f,"action",{a+"name":"android.intent.action.MAIN"})
                   ET.SubElement(f,"category",{a+"name":"android.intent.category.LAUNCHER"})
