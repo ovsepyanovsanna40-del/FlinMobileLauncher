@@ -78,23 +78,35 @@ jobs:
               View glow=new View(this);GradientDrawable gd=new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,
                 new int[]{0x88ff6a18,0x22a52b08,0x00000000});glow.setBackground(gd);
               root.addView(glow,new FrameLayout.LayoutParams(-1,-1));
+              View art=new View(this){
+                Paint p=new Paint(3);
+                @Override protected void onDraw(Canvas c){
+                  super.onDraw(c);float w=getWidth(),h=getHeight();
+                  p.setShader(new RadialGradient(w*.52f,h*.46f,w*.58f,new int[]{0x44ff6b20,0x1aff3c12,0x00000000},null,Shader.TileMode.CLAMP));
+                  c.drawRect(0,0,w,h,p);p.setShader(null);p.setColor(0x18ff9a55);p.setStrokeWidth(dp(1));
+                  for(int i=-4;i<12;i++){float x=i*w/8f;c.drawLine(x,h*.12f,x+w*.18f,h,p);}
+                  p.setColor(0x22ff6b28);p.setStyle(Paint.Style.STROKE);p.setStrokeWidth(dp(2));
+                  c.drawCircle(w*.51f,h*.47f,Math.min(w,h)*.24f,p);c.drawCircle(w*.51f,h*.47f,Math.min(w,h)*.31f,p);p.setStyle(Paint.Style.FILL);
+                }
+              };
+              root.addView(art,new FrameLayout.LayoutParams(-1,-1));
               LinearLayout page=column();page.setPadding(dp(20),dp(12),dp(20),dp(10));
               root.addView(page,new FrameLayout.LayoutParams(-1,-1));
               LinearLayout top=new LinearLayout(this);top.setGravity(Gravity.CENTER_VERTICAL);
-              TextView mark=label("X",22,Color.BLACK,true);mark.setGravity(Gravity.CENTER);
+              TextView mark=label("F",22,Color.BLACK,true);mark.setGravity(Gravity.CENTER);
               mark.setBackground(shape(orange,0,dp(10)));top.addView(mark,lp(36,34));
-              TextView brand=label("  Flin Mobile",18,Color.WHITE,true);top.addView(brand);
+              TextView brand=label("  FLIN MOBILE",18,Color.WHITE,true);top.addView(brand);
               top.addView(new View(this),new LinearLayout.LayoutParams(0,1,1));
-              top.addView(label("32 мс   •   v1.0",13,pale,false));page.addView(top,lp(-1,40));
-              TextView title=label("П Р О Е К Т   X",42,0xffffa15c,true);title.setGravity(Gravity.CENTER);
+              top.addView(label("● ONLINE     32 мс     v1.0",12,pale,true));page.addView(top,lp(-1,40));
+              TextView title=label("FLIN",54,0xffffa45b,true);title.setGravity(Gravity.CENTER);title.setLetterSpacing(0.18f);title.setShadowLayer(dp(18),0,dp(3),0xffff5a12);TextView subtitle=label("ROLEPLAY  /  MOBILE EXPERIENCE",11,0xffd6a17b,true);subtitle.setGravity(Gravity.CENTER);subtitle.setLetterSpacing(0.22f);LinearLayout hero=column();hero.setGravity(Gravity.CENTER);hero.addView(title);hero.addView(subtitle,lp(-1,24));page.addView(hero,new LinearLayout.LayoutParams(-1,0,0.8f));
               title.setShadowLayer(dp(9),0,dp(2),0xffff4a0a);page.addView(title,new LinearLayout.LayoutParams(-1,0,1.0f));
               LinearLayout content=new LinearLayout(this);content.setGravity(Gravity.CENTER_VERTICAL);
               page.addView(content,new LinearLayout.LayoutParams(-1,0,2.8f));
               LinearLayout left=column();left.setPadding(dp(4),0,dp(10),0);
               content.addView(left,new LinearLayout.LayoutParams(0,-1,1.05f));
-              left.addView(label("Сервера",17,Color.WHITE,true),lp(-1,30));
+              left.addView(label("ВЫБОР СЕРВЕРА",12,0xffffa66b,true),lp(-1,30));
               LinearLayout server=column();server.setPadding(dp(13),dp(10),dp(13),dp(10));
-              server.setBackground(shape(0xdd21130c,orange,dp(15)));
+              server.setBackground(shape(0xee1a100c,0xffb95b2a,dp(18)));
               server.addView(label("Flin Mobile #1",16,Color.WHITE,true));
               server.addView(label("● ● ● ● ●",10,0xff7c5a42,false),lp(-1,20));
               ProgressBar online=new ProgressBar(this,null,android.R.attr.progressBarStyleHorizontal);
@@ -112,7 +124,7 @@ jobs:
               LinearLayout.LayoutParams sp=lp(-1,62);sp.topMargin=dp(9);left.addView(second,sp);
               LinearLayout right=column();right.setPadding(dp(10),0,dp(4),0);
               content.addView(right,new LinearLayout.LayoutParams(0,-1,1.0f));
-              right.addView(label("Ваш ник",17,Color.WHITE,true),lp(-1,30));
+              right.addView(label("ИГРОВОЙ ПРОФИЛЬ",12,0xffffa66b,true),lp(-1,30));
               nick=new EditText(this);nick.setSingleLine(true);nick.setTextSize(16);nick.setTextColor(Color.WHITE);
               nick.setHintTextColor(0xff9b8779);nick.setHint("Nick_Name");nick.setPadding(dp(14),0,dp(12),0);
               nick.setBackground(shape(0xdd21130c,0xff80502f,dp(13)));
@@ -128,7 +140,7 @@ jobs:
                 .setMessage("Сервер: 195.18.27.226:3146\nВерсия клиента: Flin Mobile")
                 .setPositiveButton("ОК",null).show());
               discord.setOnClickListener(v->{try{startActivity(new Intent(Intent.ACTION_VIEW,Uri.parse("https://discord.com/")));}catch(Exception e){}});
-              TextView footer=label("F L I N   M O B I L E",18,0xffd66a2c,true);footer.setGravity(Gravity.CENTER);
+              TextView footer=label("BUILT FOR ROLEPLAY",11,0xffa97855,true);footer.setGravity(Gravity.CENTER);
               page.addView(footer,lp(-1,30));
               LinearLayout bottom=new LinearLayout(this);bottom.setOrientation(1);
               LinearLayout cap=new LinearLayout(this);cap.setGravity(Gravity.CENTER_VERTICAL);
