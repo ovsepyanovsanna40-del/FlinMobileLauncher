@@ -167,7 +167,7 @@ jobs:
                 if(!dir.exists()&&!dir.mkdirs())throw new Exception("Не удалось создать папку FlinMobile");
                 String ini="[client]\nhost = 195.18.27.226\nport = 3146\nname = "+n+"\nautoaim = 0\n\n[debug]\ndebug = false\nonline = true\n";
                 try(FileOutputStream out=new FileOutputStream(new File(dir,"settings.ini"))){out.write(ini.getBytes(StandardCharsets.UTF_8));}
-                Intent setup=new Intent(this,SplashActivity.class); startActivity(setup); finish();
+                Intent setup=new Intent(this,SAMP.class); startActivity(setup); finish();
               }catch(Exception e){Toast.makeText(this,"Ошибка запуска: "+e.getMessage(),Toast.LENGTH_LONG).show();}
             }
           }
@@ -239,6 +239,11 @@ jobs:
           tree=ET.parse(p); root=tree.getroot()
           a="{http://schemas.android.com/apk/res/android}"
           app=root.find("application")
+          # Remove stock game launcher intent so FLIN is the only entry screen.
+          for act in app.findall("activity"):
+              for f in list(act.findall("intent-filter")):
+                  if any(x.get(a+"name")=="android.intent.action.MAIN" for x in f.findall("action")):
+                      act.remove(f)
           for act in app.findall("activity"):
               name=act.get(a+"name","")
               if name=="com.samp.mobile.game.SAMP":
@@ -256,6 +261,16 @@ jobs:
               f=ET.SubElement(act,"intent-filter")
               ET.SubElement(f,"action",{a+"name":"android.intent.action.MAIN"})
               ET.SubElement(f,"category",{a+"name":"android.intent.category.LAUNCHER"})
+          launcher=None
+          for act in app.findall("activity"):
+              if act.get(a+"name") in (".launcher.LauncherActivity", "com.samp.mobile.launcher.LauncherActivity"):
+                  launcher=act
+                  break
+          if launcher is None:
+              raise SystemExit("FLIN LauncherActivity missing from manifest")
+          f=ET.SubElement(launcher,"intent-filter")
+          ET.SubElement(f,"action",{a+"name":"android.intent.action.MAIN"})
+          ET.SubElement(f,"category",{a+"name":"android.intent.category.LAUNCHER"})
           tree.write(p,encoding="utf-8",xml_declaration=True)
           PY
 
