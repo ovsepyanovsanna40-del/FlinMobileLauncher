@@ -99,7 +99,7 @@ jobs:
               top.addView(new View(this),new LinearLayout.LayoutParams(0,1,1));
               top.addView(label("● ONLINE     32 мс     v1.0",12,pale,true));page.addView(top,lp(-1,40));
               TextView title=label("FLIN",54,0xffffa45b,true);title.setGravity(Gravity.CENTER);title.setLetterSpacing(0.18f);title.setShadowLayer(dp(18),0,dp(3),0xffff5a12);TextView subtitle=label("ROLEPLAY  /  MOBILE EXPERIENCE",11,0xffd6a17b,true);subtitle.setGravity(Gravity.CENTER);subtitle.setLetterSpacing(0.22f);LinearLayout hero=column();hero.setGravity(Gravity.CENTER);hero.addView(title);hero.addView(subtitle,lp(-1,24));page.addView(hero,new LinearLayout.LayoutParams(-1,0,0.8f));
-              title.setShadowLayer(dp(9),0,dp(2),0xffff4a0a);page.addView(title,new LinearLayout.LayoutParams(-1,0,1.0f));
+              title.setShadowLayer(dp(18),0,dp(3),0xffff5a12);
               LinearLayout content=new LinearLayout(this);content.setGravity(Gravity.CENTER_VERTICAL);
               page.addView(content,new LinearLayout.LayoutParams(-1,0,2.8f));
               LinearLayout left=column();left.setPadding(dp(4),0,dp(10),0);
